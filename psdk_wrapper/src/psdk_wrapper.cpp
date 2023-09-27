@@ -1328,7 +1328,8 @@ PSDKWrapper::publish_dynamic_transforms()
     tf_gimbal_H20.transform.translation.z = psdk_utils::T_M300_GIMBAL_H20[2];
 
     tf2::Quaternion q_gimbal_h20;
-    q_gimbal_h20.setRPY(gimbal_angles_.vector.x, gimbal_angles_.vector.y,
+    q_gimbal_h20.setRPY(current_state_.gimbal_angles.vector.x,
+                        current_state_.gimbal_angles.vector.y,
                         get_yaw_gimbal_camera());
     tf_gimbal_H20.transform.rotation.x = q_gimbal_h20.getX();
     tf_gimbal_H20.transform.rotation.y = q_gimbal_h20.getY();
@@ -1342,14 +1343,14 @@ double
 PSDKWrapper::get_yaw_gimbal_camera()
 {
   /* Get current copter yaw wrt. to East */
-  tf2::Matrix3x3 rotation_mat(current_attitude_);
+  tf2::Matrix3x3 rotation_mat(current_state_.attitude);
   double current_roll;
   double current_pitch;
   double current_yaw;
   rotation_mat.getRPY(current_roll, current_pitch, current_yaw);
 
   /* Get current gimbal yaw wrt to East */
-  double current_gimbal_yaw = gimbal_angles_.vector.z;
+  double current_gimbal_yaw = current_state_.gimbal_angles.vector.z;
   return current_gimbal_yaw - current_yaw;
 }
 

@@ -290,7 +290,8 @@ class PSDKWrapper : public rclcpp_lifecycle::LifecycleNode
    */
   bool deinit_telemetry();
   /**
-   * @brief Initialize the flight control module
+   * @brief Initialize the flight control module. It needs the RID information
+   * to be passed to the native flight control initialization function from DJI.
    * @return true/false
    */
   bool init_flight_control();
@@ -1795,9 +1796,16 @@ class PSDKWrapper : public rclcpp_lifecycle::LifecycleNode
   bool local_altitude_reference_set_{false};
   bool set_local_position_ref_{false};
   geometry_msgs::msg::Vector3Stamped local_position_reference_;
-  psdk_interfaces::msg::PositionFused current_local_position_;
-  tf2::Quaternion current_attitude_;
-  geometry_msgs::msg::Vector3Stamped gimbal_angles_;
+
+  struct CopterState
+  {
+    psdk_interfaces::msg::PositionFused local_position;
+    sensor_msgs::msg::NavSatFix gps_position;
+    tf2::Quaternion attitude;
+    geometry_msgs::msg::Vector3Stamped gimbal_angles;
+  };
+
+  CopterState current_state_;
 
   const rmw_qos_profile_t& qos_profile_{rmw_qos_profile_services_default};
 
