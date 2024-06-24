@@ -2,6 +2,41 @@
 Changelog for package psdk_wrapper
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2024-05-31)
+------------------
+* Merge pull request `#108 <https://github.com/umdlife/psdk_ros2/issues/108>`_ from umdlife/feat/multi-thread-all
+  Separate PSDK modules in different nodes and threads
+* Merge pull request `#62 <https://github.com/umdlife/psdk_ros2/issues/62>`_ from RPS98/gimbal_base_frame
+  Add gimbal base frame
+* Contributors: Rafael Perez-Segui, Victor Massagué Respall, biancabnd
+
+1.2.1 (2024-05-24)
+------------------
+
+1.2.0 (2024-05-23)
+------------------
+* Merge pull request `#81 <https://github.com/umdlife/psdk_ros2/issues/81>`_ from umdlife/feat/sd_images
+  SD card functions
+* Merge pull request `#76 <https://github.com/umdlife/psdk_ros2/issues/76>`_ from umdlife/feat/psdk-3.8.1
+  Upgrade to Payload-SDK v3.8.1
+* Merge pull request `#77 <https://github.com/umdlife/psdk_ros2/issues/77>`_ from RPS98/dji_core_deinit
+  Clean up node on destructor
+* Merge pull request `#64 <https://github.com/umdlife/psdk_ros2/issues/64>`_ from RPS98/json_fails
+  Add include dependencies for Json utils
+* Contributors: DominikWawak, Rafael Perez-Segui, Victor Massagué Respall, amoramar, biancabnd
+
+1.1.1 (2024-03-27)
+------------------
+* Merge pull request `#68 <https://github.com/umdlife/psdk_ros2/issues/68>`_ from umdlife/hotfix/motors-stop
+  Add ESC data
+* Merge pull request `#60 <https://github.com/umdlife/psdk_ros2/issues/60>`_ from RPS98/add_namespace_to_tf
+  Add prefix to TF frames
+* Merge pull request `#65 <https://github.com/umdlife/psdk_ros2/issues/65>`_ from umdlife/feat/add-linters-workflow
+  Add clang and super linter to workflows
+* Merge pull request `#61 <https://github.com/umdlife/psdk_ros2/issues/61>`_ from umdlife/hotfix/set-home-from-gps
+  Convert coordinates to radians before setting home position
+* Contributors: DominikWawak, Rafael Perez-Segui, UMLDev Clang Robot, Victor Massagué Respall, biancabnd, vicmassy
+
 1.1.0 (2024-02-20)
 ------------------
 * Merge pull request `#51 <https://github.com/umdlife/psdk_ros2/issues/51>`_ from umdlife/feat/hms-support

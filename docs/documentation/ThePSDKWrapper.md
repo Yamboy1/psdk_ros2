@@ -20,130 +20,138 @@ This module subscribes to the main data exposed by the PSDK libraries and publis
 
 #### Available topics
 
-Given the high number of topics available, these have been grouped under different categories  mimicking the options from DJI Assistant 2:
+Given the high number of topics available, these have been grouped under different categories  mimicking the options from DJI Assistant 2. Below you can find the topics currently available as well as the maximum frequency at which you can retrieve them. Note that these frequencies are different depending on the drone model you are using. The latest information of the maximum frequency of each topic and the corresponding drones can be found in this [table](https://developer.dji.com/doc/payload-sdk-tutorial/en/function-set/basic-function/info-management.html).
 
 * **IMU**
 
-| ROS 2 Topic          | Max. freq |
-| -------------------- |-----------|
-| psdk_ros2/imu        |  400 Hz   |
+| ROS 2 Topic          | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| -------------------- |-----------| ----------------|----------|
+| psdk_ros2/imu        |  400 Hz   |   50 Hz         |  400 Hz  |
 
 * **Attitude**
 
-| ROS 2 Topic          | Max. freq |
-| -------------------- |-----------|
-| psdk_ros2/attitude   |  unknown  |
+| ROS 2 Topic          | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| -------------------- |-----------| ----------------|----------|
+| psdk_ros2/attitude   |  200 Hz   |   50 Hz         |  200 Hz  |
 
 * **Acceleration**
 
-| ROS 2 Topic                         | Max. freq |
-| ------------------------------------|-----------|
-| psdk_ros2/acceleration_ground_fused |  200 Hz   |
-| psdk_ros2/acceleration_body_fused   |  200 Hz   |
-| psdk_ros2/acceleration_body_raw     |  400 Hz   |
+| ROS 2 Topic                         | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| ------------------------------------|-----------| ----------------|----------|
+| psdk_ros2/acceleration_ground_fused |  200 Hz   |   50 Hz         |  200 Hz  |
+| psdk_ros2/acceleration_body_fused   |  200 Hz   |   50 Hz         |  200 Hz  |
+| psdk_ros2/acceleration_body_raw     |  400 Hz   |   50 Hz         |  400 Hz  |
 
 * **Velocity**
 
-| ROS 2 Topic                     | Max. freq |
-| --------------------------------|-----------|
-| psdk_ros2/velocity_ground_fused |  unknown  |
+| ROS 2 Topic                       | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| ----------------------------------|-----------| ----------------|----------|
+| psdk_ros2/velocity_ground_fused   |  200 Hz   |   50 Hz         |  200 Hz  |
 
 
 * **Angular Velocity**
 
-| ROS 2 Topic                         | Max. freq |
-| ------------------------------------|-----------|
-| psdk_ros2/angular_rate_ground_fused |  200 Hz   |
-| psdk_ros2/angular_rate_body_raw     |  400 Hz   |
+| ROS 2 Topic                         | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| ------------------------------------|-----------| ----------------|----------|
+| psdk_ros2/angular_rate_ground_fused |  200 Hz   |   50 Hz         |  200 Hz  |
+| psdk_ros2/angular_rate_body_raw     |  400 Hz   |   50 Hz         |  400 Hz  |
 
 * **Position**
 
-| ROS 2 Topic              | Max. freq |
-| -------------------------|-----------|
-| psdk_ros2/position_fused |  50 Hz    |
+| ROS 2 Topic              | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| -------------------------|-----------| ----------------|----------|
+| psdk_ros2/position_fused |  200 Hz   |   50 Hz         |  200 Hz  |
 
 * **Altitude**
 
-| ROS 2 Topic                   | Max. freq |
-| ------------------------------|-----------|
-| psdk_ros2/altitude_sea_level  |  unknown  |
-| psdk_ros2/altitude_barometric |  200 Hz   |
+| ROS 2 Topic                     | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| --------------------------------|-----------| ----------------|----------|
+| psdk_ros2/altitude_sea_level    |  200 Hz   |   50 Hz         |  200 Hz  |
+| psdk_ros2/altitude_barometric   |  200 Hz   |   50 Hz         |  200 Hz  |
 
 * **GPS Data**
 
-| ROS 2 Topic                  | Max. freq |
-| -----------------------------|-----------|
-| psdk_ros2/gps_position_fused |  unknown  |
-| psdk_ros2/gps_position       |  unknown  |
-| psdk_ros2/gps_velocity       |  unknown  |
-| psdk_ros2/gps_details        |  unknown  |
-| psdk_ros2/gps_signal_level   |  unknown  |
-| psdk_ros2/gps_control_level  |  unknown  |
+| ROS 2 Topic                   | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| ------------------------------|-----------| ----------------|----------|
+| psdk_ros2/gps_position_fused  |  200 Hz   |   50 Hz         |  200 Hz  |
+| psdk_ros2/gps_position        |  5 Hz     |   50 Hz         |  5 Hz    |
+| psdk_ros2/gps_velocity        |  5 Hz     |   50 Hz         |  5 Hz    |
+| psdk_ros2/gps_details         |  5 Hz     |   50 Hz         |  5 Hz    |
+| psdk_ros2/gps_signal_level    |  50 Hz    |   50 Hz         |  50 Hz   |
+| psdk_ros2/gps_control_level   |  5 Hz     |   50 Hz         |  5 Hz    |
 
 * **RTK Data**
 
-| ROS 2 Topic                 | Max. freq |
-| ----------------------------|-----------| 
-| psdk_ros2/rtk_position      |  unknown  |
-| psdk_ros2/rtk_velocity      |  unknown  |
-| psdk_ros2/rtk_yaw           |  unknown  |     
-| psdk_ros2/rtk_position_info |  unknown  |
-| psdk_ros2/rtk_yaw_info      |  unknown  |
+| ROS 2 Topic                   | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| ------------------------------|-----------| ----------------|----------|
+| psdk_ros2/rtk_position        |  5 Hz     |   50 Hz         |  5 Hz    |
+| psdk_ros2/rtk_velocity        |  5 Hz     |   50 Hz         |  5 Hz    |
+| psdk_ros2/rtk_yaw             |  5 Hz     |   50 Hz         |  5 Hz    |
+| psdk_ros2/rtk_position_info   |  5 Hz     |   50 Hz         |  5 Hz    |
+| psdk_ros2/rtk_yaw_info        |  5 Hz     |   50 Hz         |  5 Hz    |
 
 * **Magnetometer**
 
-| ROS 2 Topic              | Max. freq |
-| -------------------------|-----------| 
-| psdk_ros2/magnetic_field |  100 Hz   |
+| ROS 2 Topic                   | M300 RTK  |  Matrice 30/30T | M350 RTK | 
+| ------------------------------|-----------| ----------------|----------|
+| psdk_ros2/magnetic_field      |  100 Hz   |   50 Hz         |  100 Hz  |
 
 * **RC Channels Data**
 
-| ROS 2 Topic          | Max. freq |
-| -------------------- |-----------| 
-| psdk_ros2/rc         |  100 Hz   |
+| ROS 2 Topic       | M300 RTK  |  Matrice 30/30T | M350 RTK  | 
+| ------------------|-----------| ----------------|---------- |
+| psdk_ros2/rc      |  50 Hz    |   50 Hz         |  50 Hz    |
 
 * **Gimbal Data**
 
-| ROS 2 Topic             | Max. freq |
-| ------------------------|-----------| 
-| psdk_ros2/gimbal_angles |  50 Hz    |
-| psdk_ros2/gimbal_status |  50 Hz    |
+| ROS 2 Topic                  | M300 RTK   |  Matrice 30/30T | M350 RTK | 
+| -----------------------------|------------| ----------------|----------|
+| psdk_ros2/gimbal_angles      |  50 Hz     |   50 Hz         |  50 Hz  |
+| psdk_ros2/gimbal_status      |  50 Hz     |   -             |  50 Hz  |
 
 * **Flight Status**
 
-| ROS 2 Topic                   | Max. freq |
-| ------------------------------|-----------| 
-| psdk_ros2/flight_status       |  unknown  |
-| psdk_ros2/display_mode        |  50 Hz    |
-| psdk_ros2/landing_gear_status |  50 Hz    |     
-| psdk_ros2/motor_start_error   |  50 Hz    |
-| psdk_ros2/flight_anomaly      |  50 Hz    |
+| ROS 2 Topic                   | M300 RTK   |  Matrice 30/30T | M350 RTK | 
+| ------------------------------|------------| ----------------|----------|
+| psdk_ros2/flight_status       |  50 Hz     |   50 Hz         |  50 Hz   |
+| psdk_ros2/display_mode        |  50 Hz     |   50 Hz         |  50 Hz   |
+| psdk_ros2/landing_gear_status |  50 Hz     |   -             |  50 Hz   |
+| psdk_ros2/motor_start_error   |  50 Hz     |   -             |  50 Hz   |
+| psdk_ros2/flight_anomaly      |  50 Hz     |   50 Hz         |  50 Hz   |
 
 * **Battery Level**
 
-| ROS 2 Topic          | Max. freq |
-| -------------------- |-----------| 
-| psdk_ros2/battery    |  unknown  |
+| ROS 2 Topic                               | M300 RTK   |  Matrice 30/30T | M350 RTK | 
+| ------------------------------------------|------------| ----------------|----------|
+| psdk_ros2/battery                         |  50 Hz     |   -             |  50 Hz   |
+| psdk_ros2/psdk_ros2/single_battery_index1 |  50 Hz     |   50 Hz         |  50 Hz   |
+| psdk_ros2/psdk_ros2/single_battery_index2 |  50 Hz     |   50 Hz         |  50 Hz   |
 
 * **Control Information**
 
-| ROS 2 Topic                      | Max. freq |
-| ---------------------------------|-----------| 
-| psdk_ros2/height_above_ground    |  100 Hz   |
-| psdk_ros2/control_mode           |  unknown  |
-| psdk_ros2/home_point             |  unknown  |
-| psdk_ros2/home_point_status      |  unknown  |
-| psdk_ros2/home_point_altitude    |  unknown  |
-| psdk_ros2/relative_obstacle_info |  100 Hz   |
+| ROS 2 Topic                       | M300 RTK    |  Matrice 30/30T | M350 RTK | 
+| ----------------------------------|-------------| ----------------|----------|
+| psdk_ros2/height_above_ground     |  200 Hz     |   -             |  200 Hz  |
+| psdk_ros2/control_mode            |  50 Hz      |   50 Hz         |  50 Hz   |
+| psdk_ros2/home_point              |  50 Hz      |   50 Hz         |  50 Hz   |
+| psdk_ros2/home_point_status       |  50 Hz      |   50 Hz         |  50 Hz   |
+| psdk_ros2/home_point_altitude     |  1 Hz       |   50 Hz         |  1 Hz    |
+| psdk_ros2/relative_obstacle_info  |  100 Hz     |   50 Hz         |  100 Hz  |
 
 
 * **Health Management System (HMS)**
 
-| ROS 2 Topic               | Max. freq |
-| ------------------------- |-----------|
-| psdk_ros2/hms_info_table  |  1 Hz     |
+| ROS 2 Topic               | M300 RTK   | Matrice 30/30T | M350 RTK | 
+| --------------------------|------------|----------------|----------|
+| psdk_ros2/hms_info_table  |  1 Hz      |   1 Hz         |  1 Hz    |
 
-The user can set a specific publishing frequency to each category within the `psdk_params.yaml` file and this will be applied to all topics contained within it. The possible frequencies that can be set for any given category are: 1, 5, 10, 50, 100, 200, 400 Hz.  If the frequency set by the user is higher than the maximum one handled internally by the PSDK libraries, an error message will appear. 
+* **ESC Data**
+
+| ROS 2 Topic         | M300 RTK   | Matrice 30/30T | M350 RTK | 
+| --------------------|------------|----------------|----------|
+| psdk_ros2/esc_data  |  50 Hz     |   50 Hz        |  50 Hz   |
+
+The user can set a specific publishing frequency to each category within the `psdk_params.yaml` file and this will be applied to all topics contained within it. The possible frequencies that can be set for any given category are: 1, 5, 10, 50, 100, 200, 400 Hz. If the frequency set by the user is higher than the maximum one handled internally by the PSDK libraries, an error message will appear. Setting a high number of topics to the maximum frequency may prevent some topics from initializing or may reduce the update frequency of certain topics. Please consider using a moderate number of topics to optimize performance and ensure all topics initialize properly.
 
 <div style="background-color: #D6EAF8; padding: 10px; border: 1px solid ##FBFAFA;">
     <p style="margin: 0;"><strong> Note:</strong>  If 0 Hz frequency is set, the publisher of that topic will be disabled.</p>
@@ -257,8 +265,7 @@ The following services can be called to start shooting photos or record videos w
 | Name                                    | Type      |
 | ----------------------------------------| --------- | 
 | psdk_ros2/camera_shoot_single_photo     | Service   | 
-| psdk_ros2/camera_shoot_burst_photo      | Service   | 
-| psdk_ros2/camera_shoot_aeb_photo        | Service   |   
+| psdk_ros2/camera_shoot_burst_photo      | Service   |  
 | psdk_ros2/camera_shoot_interval_photo   | Service   | 
 | psdk_ros2/camera_stop_shoot_photo       | Service   | 
 | psdk_ros2/camera_record_video           | Service   |
@@ -277,14 +284,17 @@ Please notice that the frequency of the streaming will depend on the computation
 
 #### Camera file management
 
-These services currently are not working properly. Future work will address these functionalities. 
+Camera services for managing the SD card storage from the DJI payload. Calling the `psdk_ros2/camera_get_file_list_info` returns as a result the number of files and an array of file data. With this information you are able to manipulate the objects inside the SD card by calling the other services like `psdk_ros2/camera_download_file_by_index` or `psdk_ros2/camera_delete_file_by_index`. Inside these services you need to specify the location where the files will be saved. You can configure the path for the file download via a ROS 2 parameter (see psdk_params.yml).
+
+Moreover, one can check the current storage capacity of the SD card (`psdk_ros2/camera_get_sd_storage_info`) and format it if desired (`psdk_ros2/camera_format_sd_card`).
 
 | Name                                        | Type      |
 | --------------------------------------------| --------- | 
-| psdk_ros2/camera_download_file_list         | Service   |
-| psdk_ros2/camera_download_file_by_index     | Service   |
-| psdk_ros2/camera_delete_file_by_index       | Service   |
-
+| psdk_ros2/camera_get_file_list_info         | Service   |
+| psdk_ros2/camera_download_file_by_index     | Action    |
+| psdk_ros2/camera_delete_file_by_index       | Action    |
+| psdk_ros2/camera_get_sd_storage_info        | Service   |
+| psdk_ros2/camera_format_sd_card             | Service   |
  
 
 ### Gimbal

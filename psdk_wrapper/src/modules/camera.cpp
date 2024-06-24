@@ -8,22 +8,272 @@
 /**
  * @file camera.cpp
  *
- * @brief
+ * @brief This file contains the implementation of the CameraModule class. This
+ * class is responsible for handling the camera module of the Payload-SDK.
+ * It provides services to set and get camera parameters, such as exposure mode,
+ * shutter speed, ISO, focus target, etc. among others.
+ * It also provides services to shoot single, burst, and interval photos.
  *
  * @author Lidia de la Torre Vazquez
  * Contact: lidia@unmanned.life
  *
  */
 
-#include "psdk_wrapper/psdk_wrapper.hpp"
-#include "psdk_wrapper/psdk_wrapper_utils.hpp"
+#include "psdk_wrapper/modules/camera.hpp"
+
+#include "psdk_wrapper/utils/psdk_wrapper_utils.hpp"
 
 namespace psdk_ros2
 {
-bool
-PSDKWrapper::init_camera_manager()
+CameraModule::CameraModule(const std::string &name)
+    : rclcpp_lifecycle::LifecycleNode(
+          name, "",
+          rclcpp::NodeOptions().arguments(
+              {"--ros-args", "-r",
+               name + ":" + std::string("__node:=") + name}))
+
 {
-  RCLCPP_INFO(get_logger(), "Initiating camera manager...");
+  RCLCPP_INFO(get_logger(), "Creating CameraModule");
+}
+
+CameraModule::~CameraModule()
+{
+  RCLCPP_INFO(get_logger(), "Destroying CameraModule");
+}
+
+CameraModule::CallbackReturn
+CameraModule::on_configure(const rclcpp_lifecycle::State &state)
+{
+  (void)state;
+  RCLCPP_INFO(get_logger(), "Configuring CameraModule");
+
+  camera_shoot_single_photo_service_ = create_service<CameraShootSinglePhoto>(
+      "psdk_ros2/camera_shoot_single_photo",
+      std::bind(&CameraModule::camera_shoot_single_photo_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_shoot_burst_photo_service_ = create_service<CameraShootBurstPhoto>(
+      "psdk_ros2/camera_shoot_burst_photo",
+      std::bind(&CameraModule::camera_shoot_burst_photo_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_shoot_interval_photo_service_ =
+      create_service<CameraShootIntervalPhoto>(
+          "psdk_ros2/camera_shoot_interval_photo",
+          std::bind(&CameraModule::camera_shoot_interval_photo_cb, this,
+                    std::placeholders::_1, std::placeholders::_2),
+          qos_profile_);
+  camera_stop_shoot_photo_service_ = create_service<CameraStopShootPhoto>(
+      "psdk_ros2/camera_stop_shoot_photo",
+      std::bind(&CameraModule::camera_stop_shoot_photo_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_record_video_service_ = create_service<CameraRecordVideo>(
+      "psdk_ros2/camera_record_video",
+      std::bind(&CameraModule::camera_record_video_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_get_laser_ranging_info_service_ =
+      create_service<CameraGetLaserRangingInfo>(
+          "psdk_ros2/camera_get_laser_ranging_info",
+          std::bind(&CameraModule::camera_get_laser_ranging_info_cb, this,
+                    std::placeholders::_1, std::placeholders::_2),
+          qos_profile_);
+  camera_get_file_list_info_service_ = create_service<CameraGetFileListInfo>(
+      "psdk_ros2/camera_get_file_list_info",
+      std::bind(&CameraModule::camera_get_file_list_info_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_format_sd_card_service_ = create_service<CameraFormatSdCard>(
+      "psdk_ros2/camera_format_sd_card",
+      std::bind(&CameraModule::camera_format_sd_card_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_get_sd_storage_info_service_ = create_service<CameraGetSDStorageInfo>(
+      "psdk_ros2/camera_get_sd_storage_info",
+      std::bind(&CameraModule::camera_get_sd_storage_info_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_get_type_service_ = create_service<CameraGetType>(
+      "psdk_ros2/camera_get_type",
+      std::bind(&CameraModule::camera_get_type_cb, this, std::placeholders::_1,
+                std::placeholders::_2),
+      qos_profile_);
+  camera_set_exposure_mode_ev_service_ =
+      create_service<CameraSetExposureModeEV>(
+          "psdk_ros2/camera_set_exposure_mode_ev",
+          std::bind(&CameraModule::camera_set_exposure_mode_ev_cb, this,
+                    std::placeholders::_1, std::placeholders::_2),
+          qos_profile_);
+  camera_get_exposure_mode_ev_service_ =
+      create_service<CameraGetExposureModeEV>(
+          "psdk_ros2/camera_get_exposure_mode_ev",
+          std::bind(&CameraModule::camera_get_exposure_mode_ev_cb, this,
+                    std::placeholders::_1, std::placeholders::_2),
+          qos_profile_);
+  camera_set_shutter_speed_service_ = create_service<CameraSetShutterSpeed>(
+      "psdk_ros2/camera_set_shutter_speed",
+      std::bind(&CameraModule::camera_set_shutter_speed_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_get_shutter_speed_service_ = create_service<CameraGetShutterSpeed>(
+      "psdk_ros2/camera_get_shutter_speed",
+      std::bind(&CameraModule::camera_get_shutter_speed_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_set_iso_service_ = create_service<CameraSetISO>(
+      "psdk_ros2/camera_set_iso",
+      std::bind(&CameraModule::camera_set_iso_cb, this, std::placeholders::_1,
+                std::placeholders::_2),
+      qos_profile_);
+  camera_get_iso_service_ = create_service<CameraGetISO>(
+      "psdk_ros2/camera_get_iso",
+      std::bind(&CameraModule::camera_get_iso_cb, this, std::placeholders::_1,
+                std::placeholders::_2),
+      qos_profile_);
+  camera_set_focus_target_service_ = create_service<CameraSetFocusTarget>(
+      "psdk_ros2/camera_set_focus_target",
+      std::bind(&CameraModule::camera_set_focus_target_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_get_focus_target_service_ = create_service<CameraGetFocusTarget>(
+      "psdk_ros2/camera_get_focus_target",
+      std::bind(&CameraModule::camera_get_focus_target_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_set_focus_mode_service_ = create_service<CameraSetFocusMode>(
+      "psdk_ros2/camera_set_focus_mode",
+      std::bind(&CameraModule::camera_set_focus_mode_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_get_focus_mode_service_ = create_service<CameraGetFocusMode>(
+      "psdk_ros2/camera_get_focus_mode",
+      std::bind(&CameraModule::camera_get_focus_mode_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_set_optical_zoom_service_ = create_service<CameraSetOpticalZoom>(
+      "psdk_ros2/camera_set_optical_zoom",
+      std::bind(&CameraModule::camera_set_optical_zoom_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_get_optical_zoom_service_ = create_service<CameraGetOpticalZoom>(
+      "psdk_ros2/camera_get_optical_zoom",
+      std::bind(&CameraModule::camera_get_optical_zoom_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_set_infrared_zoom_service_ = create_service<CameraSetInfraredZoom>(
+      "psdk_ros2/camera_set_infrared_zoom",
+      std::bind(&CameraModule::camera_set_infrared_zoom_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_set_aperture_service_ = create_service<CameraSetAperture>(
+      "psdk_ros2/camera_set_aperture",
+      std::bind(&CameraModule::camera_set_aperture_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+  camera_get_aperture_service_ = create_service<CameraGetAperture>(
+      "psdk_ros2/camera_get_aperture",
+      std::bind(&CameraModule::camera_get_aperture_cb, this,
+                std::placeholders::_1, std::placeholders::_2),
+      qos_profile_);
+
+  // Camera action servers
+  camera_download_file_by_index_server_ =
+      std::make_unique<utils::ActionServer<CameraDownloadFileByIndex>>(
+          get_node_base_interface(), get_node_clock_interface(),
+          get_node_logging_interface(), get_node_waitables_interface(),
+          "psdk_ros2/camera_download_file_by_index",
+          std::bind(&CameraModule::execute_download_file_by_index, this));
+  camera_delete_file_by_index_server_ =
+      std::make_unique<utils::ActionServer<CameraDeleteFileByIndex>>(
+          get_node_base_interface(), get_node_clock_interface(),
+          get_node_logging_interface(), get_node_waitables_interface(),
+          "psdk_ros2/camera_delete_file_by_index",
+          std::bind(&CameraModule::execute_delete_file_by_index, this));
+  return CallbackReturn::SUCCESS;
+}
+
+CameraModule::CallbackReturn
+CameraModule::on_activate(const rclcpp_lifecycle::State &state)
+{
+  (void)state;
+  RCLCPP_INFO(get_logger(), "Activating CameraModule");
+  camera_download_file_by_index_server_->activate();
+  camera_delete_file_by_index_server_->activate();
+  return CallbackReturn::SUCCESS;
+}
+
+CameraModule::CallbackReturn
+CameraModule::on_deactivate(const rclcpp_lifecycle::State &state)
+{
+  (void)state;
+  RCLCPP_INFO(get_logger(), "Deactivating CameraModule");
+
+  camera_download_file_by_index_server_->deactivate();
+  camera_delete_file_by_index_server_->deactivate();
+  return CallbackReturn::SUCCESS;
+}
+
+CameraModule::CallbackReturn
+CameraModule::on_cleanup(const rclcpp_lifecycle::State &state)
+{
+  (void)state;
+  RCLCPP_INFO(get_logger(), "Cleaning up CameraModule");
+
+  // Action servers
+  camera_download_file_by_index_server_.reset();
+  camera_delete_file_by_index_server_.reset();
+  // Service servers
+  camera_shoot_single_photo_service_.reset();
+  camera_shoot_burst_photo_service_.reset();
+  camera_shoot_interval_photo_service_.reset();
+  camera_stop_shoot_photo_service_.reset();
+  camera_record_video_service_.reset();
+  camera_get_type_service_.reset();
+  camera_set_exposure_mode_ev_service_.reset();
+  camera_get_exposure_mode_ev_service_.reset();
+  camera_set_shutter_speed_service_.reset();
+  camera_get_shutter_speed_service_.reset();
+  camera_set_iso_service_.reset();
+  camera_get_iso_service_.reset();
+  camera_set_focus_target_service_.reset();
+  camera_get_focus_target_service_.reset();
+  camera_set_focus_mode_service_.reset();
+  camera_get_focus_mode_service_.reset();
+  camera_set_optical_zoom_service_.reset();
+  camera_get_optical_zoom_service_.reset();
+  camera_set_infrared_zoom_service_.reset();
+  camera_set_aperture_service_.reset();
+  camera_get_laser_ranging_info_service_.reset();
+  camera_get_file_list_info_service_.reset();
+  camera_format_sd_card_service_.reset();
+  camera_get_sd_storage_info_service_.reset();
+  camera_get_aperture_service_.reset();
+
+  return CallbackReturn::SUCCESS;
+}
+
+CameraModule::CallbackReturn
+CameraModule::on_shutdown(const rclcpp_lifecycle::State &state)
+{
+  (void)state;
+  RCLCPP_INFO(get_logger(), "Shutting down CameraModule");
+  std::unique_lock<std::shared_mutex> lock(global_ptr_mutex_);
+  global_camera_ptr_.reset();
+  return CallbackReturn::SUCCESS;
+}
+
+bool
+CameraModule::init()
+{
+  if (is_module_initialized_)
+  {
+    RCLCPP_WARN(get_logger(),
+                "Camera module is already initialized, skipping.");
+    return true;
+  }
+
+  RCLCPP_INFO(get_logger(), "Initiating camera manager");
   T_DjiReturnCode return_code = DjiCameraManager_Init();
   if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
   {
@@ -39,15 +289,15 @@ PSDKWrapper::init_camera_manager()
   if (get_camera_type(&camera_type, main_payload_index))
   {
     RCLCPP_INFO(get_logger(), "Camera type %s detected", camera_type.c_str());
-    publish_camera_transforms_ = true;
   }
+  is_module_initialized_ = true;
   return true;
 }
 
 bool
-PSDKWrapper::deinit_camera_manager()
+CameraModule::deinit()
 {
-  RCLCPP_INFO(get_logger(), "Deinitializing camera manager...");
+  RCLCPP_INFO(get_logger(), "Deinitializing camera manager");
   T_DjiReturnCode return_code = DjiCameraManager_DeInit();
   if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
   {
@@ -56,12 +306,13 @@ PSDKWrapper::deinit_camera_manager()
                  return_code);
     return false;
   }
+  is_module_initialized_ = false;
   return true;
 }
 
 bool
-PSDKWrapper::get_camera_type(std::string *camera_type,
-                             const E_DjiMountPosition index)
+CameraModule::get_camera_type(std::string *camera_type,
+                              const E_DjiMountPosition index)
 {
   T_DjiReturnCode return_code =
       DjiCameraManager_GetCameraType(index, &attached_camera_type_);
@@ -90,7 +341,7 @@ PSDKWrapper::get_camera_type(std::string *camera_type,
 }
 
 void
-PSDKWrapper::camera_get_type_cb(
+CameraModule::camera_get_type_cb(
     const std::shared_ptr<CameraGetType::Request> request,
     const std::shared_ptr<CameraGetType::Response> response)
 {
@@ -110,7 +361,7 @@ PSDKWrapper::camera_get_type_cb(
 }
 
 void
-PSDKWrapper::camera_set_exposure_mode_ev_cb(
+CameraModule::camera_set_exposure_mode_ev_cb(
     const std::shared_ptr<CameraSetExposureModeEV::Request> request,
     const std::shared_ptr<CameraSetExposureModeEV::Response> response)
 {
@@ -164,7 +415,7 @@ PSDKWrapper::camera_set_exposure_mode_ev_cb(
 }
 
 void
-PSDKWrapper::camera_get_exposure_mode_ev_cb(
+CameraModule::camera_get_exposure_mode_ev_cb(
     const std::shared_ptr<CameraGetExposureModeEV::Request> request,
     const std::shared_ptr<CameraGetExposureModeEV::Response> response)
 {
@@ -205,7 +456,7 @@ PSDKWrapper::camera_get_exposure_mode_ev_cb(
 }
 
 void
-PSDKWrapper::camera_set_shutter_speed_cb(
+CameraModule::camera_set_shutter_speed_cb(
     const std::shared_ptr<CameraSetShutterSpeed::Request> request,
     const std::shared_ptr<CameraSetShutterSpeed::Response> response)
 {
@@ -261,7 +512,7 @@ PSDKWrapper::camera_set_shutter_speed_cb(
 }
 
 void
-PSDKWrapper::camera_get_shutter_speed_cb(
+CameraModule::camera_get_shutter_speed_cb(
     const std::shared_ptr<CameraGetShutterSpeed::Request> request,
     const std::shared_ptr<CameraGetShutterSpeed::Response> response)
 {
@@ -289,7 +540,7 @@ PSDKWrapper::camera_get_shutter_speed_cb(
 }
 
 void
-PSDKWrapper::camera_set_iso_cb(
+CameraModule::camera_set_iso_cb(
     const std::shared_ptr<CameraSetISO::Request> request,
     const std::shared_ptr<CameraSetISO::Response> response)
 {
@@ -343,7 +594,7 @@ PSDKWrapper::camera_set_iso_cb(
 }
 
 void
-PSDKWrapper::camera_get_iso_cb(
+CameraModule::camera_get_iso_cb(
     const std::shared_ptr<CameraGetISO::Request> request,
     const std::shared_ptr<CameraGetISO::Response> response)
 {
@@ -371,7 +622,7 @@ PSDKWrapper::camera_get_iso_cb(
 }
 
 void
-PSDKWrapper::camera_set_focus_target_cb(
+CameraModule::camera_set_focus_target_cb(
     const std::shared_ptr<CameraSetFocusTarget::Request> request,
     const std::shared_ptr<CameraSetFocusTarget::Response> response)
 {
@@ -428,7 +679,7 @@ PSDKWrapper::camera_set_focus_target_cb(
 }
 
 void
-PSDKWrapper::camera_get_focus_target_cb(
+CameraModule::camera_get_focus_target_cb(
     const std::shared_ptr<CameraGetFocusTarget::Request> request,
     const std::shared_ptr<CameraGetFocusTarget::Response> response)
 {
@@ -457,7 +708,7 @@ PSDKWrapper::camera_get_focus_target_cb(
 }
 
 void
-PSDKWrapper::camera_set_focus_mode_cb(
+CameraModule::camera_set_focus_mode_cb(
     const std::shared_ptr<CameraSetFocusMode::Request> request,
     const std::shared_ptr<CameraSetFocusMode::Response> response)
 {
@@ -488,7 +739,7 @@ PSDKWrapper::camera_set_focus_mode_cb(
 }
 
 void
-PSDKWrapper::camera_get_focus_mode_cb(
+CameraModule::camera_get_focus_mode_cb(
     const std::shared_ptr<CameraGetFocusMode::Request> request,
     const std::shared_ptr<CameraGetFocusMode::Response> response)
 {
@@ -517,7 +768,7 @@ PSDKWrapper::camera_get_focus_mode_cb(
 }
 
 void
-PSDKWrapper::camera_set_optical_zoom_cb(
+CameraModule::camera_set_optical_zoom_cb(
     const std::shared_ptr<CameraSetOpticalZoom::Request> request,
     const std::shared_ptr<CameraSetOpticalZoom::Response> response)
 {
@@ -549,7 +800,7 @@ PSDKWrapper::camera_set_optical_zoom_cb(
 }
 
 void
-PSDKWrapper::camera_get_optical_zoom_cb(
+CameraModule::camera_get_optical_zoom_cb(
     const std::shared_ptr<CameraGetOpticalZoom::Request> request,
     const std::shared_ptr<CameraGetOpticalZoom::Response> response)
 {
@@ -577,7 +828,7 @@ PSDKWrapper::camera_get_optical_zoom_cb(
 }
 
 void
-PSDKWrapper::camera_set_infrared_zoom_cb(
+CameraModule::camera_set_infrared_zoom_cb(
     const std::shared_ptr<CameraSetInfraredZoom::Request> request,
     const std::shared_ptr<CameraSetInfraredZoom::Response> response)
 {
@@ -609,7 +860,7 @@ PSDKWrapper::camera_set_infrared_zoom_cb(
 }
 
 void
-PSDKWrapper::camera_set_aperture_cb(
+CameraModule::camera_set_aperture_cb(
     const std::shared_ptr<CameraSetAperture::Request> request,
     const std::shared_ptr<CameraSetAperture::Response> response)
 {
@@ -641,7 +892,7 @@ PSDKWrapper::camera_set_aperture_cb(
 }
 
 void
-PSDKWrapper::camera_get_aperture_cb(
+CameraModule::camera_get_aperture_cb(
     const std::shared_ptr<CameraGetAperture::Request> request,
     const std::shared_ptr<CameraGetAperture::Response> response)
 {
@@ -673,7 +924,7 @@ PSDKWrapper::camera_get_aperture_cb(
 }
 
 void
-PSDKWrapper::camera_shoot_single_photo_cb(
+CameraModule::camera_shoot_single_photo_cb(
     const std::shared_ptr<CameraShootSinglePhoto::Request> request,
     const std::shared_ptr<CameraShootSinglePhoto::Response> response)
 {
@@ -731,7 +982,7 @@ PSDKWrapper::camera_shoot_single_photo_cb(
 }
 
 void
-PSDKWrapper::camera_shoot_burst_photo_cb(
+CameraModule::camera_shoot_burst_photo_cb(
     const std::shared_ptr<CameraShootBurstPhoto::Request> request,
     const std::shared_ptr<CameraShootBurstPhoto::Response> response)
 {
@@ -815,93 +1066,7 @@ PSDKWrapper::camera_shoot_burst_photo_cb(
 }
 
 void
-PSDKWrapper::camera_shoot_aeb_photo_cb(
-    const std::shared_ptr<CameraShootAEBPhoto::Request> request,
-    const std::shared_ptr<CameraShootAEBPhoto::Response> response)
-{
-  T_DjiReturnCode return_code;
-  T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
-  E_DjiMountPosition index =
-      static_cast<E_DjiMountPosition>(request->payload_index);
-  E_DjiCameraManagerPhotoAEBCount aeb_count =
-      static_cast<E_DjiCameraManagerPhotoAEBCount>(request->photo_aeb_count);
-
-  /*!< set camera work mode as shoot photo */
-  return_code =
-      DjiCameraManager_SetMode(index, DJI_CAMERA_MANAGER_WORK_MODE_SHOOT_PHOTO);
-  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-  {
-    RCLCPP_ERROR(
-        get_logger(),
-        "Setting mounted position %d camera's work mode as shoot photo "
-        "mode failed, error code :%ld.",
-        index, return_code);
-    response->success = false;
-    return;
-  }
-
-  /*!< set shoot-photo mode */
-  return_code = DjiCameraManager_SetShootPhotoMode(
-      index, DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_AEB);
-  if (return_code == DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
-  {
-    RCLCPP_ERROR(get_logger(),
-                 "Command unsupported for camera mounted in position %d,",
-                 index);
-    response->success = false;
-    return;
-  }
-
-  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-  {
-    RCLCPP_ERROR(get_logger(),
-                 "Setting mounted position %d camera's shoot photo mode as "
-                 "AEB-photo mode failed, error code :%ld.",
-                 index, return_code);
-    response->success = false;
-    return;
-  }
-
-  /*! wait the APP change the shoot-photo mode display */
-  osalHandler->TaskSleepMs(500);
-
-  /*!< set shoot-photo mode parameter */
-  return_code = DjiCameraManager_SetPhotoAEBCount(index, aeb_count);
-  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-  {
-    RCLCPP_ERROR(get_logger(),
-                 "Settinh mounted position %d camera's AEB count(%d) failed,"
-                 "error code :%ld.",
-                 index, aeb_count, return_code);
-    response->success = false;
-    return;
-  }
-
-  /*!< start to shoot single photo */
-  return_code = DjiCameraManager_StartShootPhoto(
-      index, DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_AEB);
-  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-  {
-    RCLCPP_ERROR(get_logger(),
-                 "Mounted position %d camera shoot photo failed, "
-                 "error code :%ld.",
-                 index, return_code);
-    response->success = false;
-    return;
-  }
-  else
-  {
-    RCLCPP_INFO(get_logger(),
-                "Started shooting photo in AEB mode successfully for camera "
-                "with mount position %d.",
-                index);
-    response->success = true;
-    return;
-  }
-}
-
-void
-PSDKWrapper::camera_shoot_interval_photo_cb(
+CameraModule::camera_shoot_interval_photo_cb(
     const std::shared_ptr<CameraShootIntervalPhoto::Request> request,
     const std::shared_ptr<CameraShootIntervalPhoto::Response> response)
 {
@@ -998,7 +1163,7 @@ PSDKWrapper::camera_shoot_interval_photo_cb(
 }
 
 void
-PSDKWrapper::camera_stop_shoot_photo_cb(
+CameraModule::camera_stop_shoot_photo_cb(
     const std::shared_ptr<CameraStopShootPhoto::Request> request,
     const std::shared_ptr<CameraStopShootPhoto::Response> response)
 {
@@ -1028,7 +1193,7 @@ PSDKWrapper::camera_stop_shoot_photo_cb(
 }
 
 void
-PSDKWrapper::camera_record_video_cb(
+CameraModule::camera_record_video_cb(
     const std::shared_ptr<CameraRecordVideo::Request> request,
     const std::shared_ptr<CameraRecordVideo::Response> response)
 {
@@ -1099,7 +1264,7 @@ PSDKWrapper::camera_record_video_cb(
 }
 
 void
-PSDKWrapper::camera_get_laser_ranging_info_cb(
+CameraModule::camera_get_laser_ranging_info_cb(
     const std::shared_ptr<CameraGetLaserRangingInfo::Request> request,
     const std::shared_ptr<CameraGetLaserRangingInfo::Response> response)
 {
@@ -1138,98 +1303,423 @@ PSDKWrapper::camera_get_laser_ranging_info_cb(
   }
 }
 
-// TODO(@lidiadltv): Not working. Debug potential issue
+T_DjiReturnCode
+c_camera_manager_download_file_data_callback(
+    T_DjiDownloadFilePacketInfo packetInfo, const uint8_t *data, uint16_t len)
+{
+  std::unique_lock<std::shared_mutex> lock(
+      global_camera_ptr_->global_ptr_mutex_);
+  return global_camera_ptr_->camera_manager_download_file_data_callback(
+      packetInfo, data, len);
+}
+
 void
-PSDKWrapper::camera_download_file_list_cb(
-    const std::shared_ptr<CameraDownloadFileList::Request> request,
-    const std::shared_ptr<CameraDownloadFileList::Response> response)
+CameraModule::camera_format_sd_card_cb(
+    const std::shared_ptr<CameraFormatSdCard::Request> request,
+    const std::shared_ptr<CameraFormatSdCard::Response> response)
 {
   T_DjiReturnCode return_code;
   E_DjiMountPosition index =
       static_cast<E_DjiMountPosition>(request->payload_index);
-  T_DjiCameraManagerFileList media_file_list;
 
-  return_code = DjiCameraManager_DownloadFileList(index, &media_file_list);
+  return_code = DjiCameraManager_FormatStorage(index);
   if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
   {
-    RCLCPP_ERROR(get_logger(), "Download file list failed, error code: %ld.",
+    RCLCPP_ERROR(get_logger(), "Format SD card failed, error code: %ld.",
                  return_code);
     response->success = false;
     return;
   }
   else
   {
-    RCLCPP_INFO(get_logger(), "Download file list successful.");
-    // TODO(@lidiadltv): Return file name list
+    RCLCPP_INFO(get_logger(), "Format SD card successful.");
     response->success = true;
-    return;
   }
 }
 
-// TODO(@lidiadltv): Not working. Debug potential issue
 void
-PSDKWrapper::camera_download_file_by_index_cb(
-    const std::shared_ptr<CameraDownloadFileByIndex::Request> request,
-    const std::shared_ptr<CameraDownloadFileByIndex::Response> response)
+CameraModule::camera_get_sd_storage_info_cb(
+    const std::shared_ptr<CameraGetSDStorageInfo::Request> request,
+    const std::shared_ptr<CameraGetSDStorageInfo::Response> response)
 {
+  T_DjiCameraManagerStorageInfo storageInfo;
   T_DjiReturnCode return_code;
   E_DjiMountPosition index =
       static_cast<E_DjiMountPosition>(request->payload_index);
+  return_code = DjiCameraManager_GetCameraType(index, &attached_camera_type_);
+  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+  {
+    RCLCPP_ERROR(
+        get_logger(),
+        "Get mounted position %d camera's type failed, error code: %ld", index,
+        return_code);
+    return;
+  }
+  else
+  {
+    if (attached_camera_type_ == DJI_CAMERA_TYPE_L1 ||
+        attached_camera_type_ == DJI_CAMERA_TYPE_P1 ||
+        attached_camera_type_ == DJI_CAMERA_TYPE_M3D ||
+        attached_camera_type_ == DJI_CAMERA_TYPE_M3TD)
+    {
+      RCLCPP_ERROR(get_logger(),
+                   "Position %d, camera type %d, doesn't support get storage "
+                   "info. Sample exits.",
+                   index, attached_camera_type_);
+      response->success = false;
+      return;
+    }
+  }
 
-  return_code =
-      DjiCameraManager_DownloadFileByIndex(index, request->file_index);
+  return_code = DjiCameraManager_GetStorageInfo(index, &storageInfo);
+  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+  {
+    RCLCPP_ERROR(get_logger(), "Get storage info failed, error code: %ld",
+                 return_code);
+    return;
+  }
+
+  RCLCPP_INFO(get_logger(), "total capacity: %d, remainCapcity: %d",
+              storageInfo.totalCapacity, storageInfo.remainCapacity);
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+  response->success = true;
+  response->total_capacity = storageInfo.totalCapacity;
+  response->remain_capacity = storageInfo.remainCapacity;
+}
+
+void
+CameraModule::register_file_data_callback(E_DjiMountPosition index)
+{
+  T_DjiReturnCode return_code;
+  return_code = DjiCameraManager_RegDownloadFileDataCallback(
+      index, c_camera_manager_download_file_data_callback);
+  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+  {
+    RCLCPP_ERROR(
+        get_logger(),
+        "Register download file data callback failed, error code: %ld.",
+        return_code);
+    return;
+  }
+  else
+  {
+    RCLCPP_DEBUG(get_logger(),
+                 "Register download file data callback successful.");
+  }
+}
+
+void
+CameraModule::obtain_downloader_rights(E_DjiMountPosition index)
+{
+  T_DjiReturnCode return_code;
+  return_code = DjiCameraManager_ObtainDownloaderRights(index);
   if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
   {
     RCLCPP_ERROR(get_logger(),
-                 "Download file by index failed, error code: %ld.",
+                 "Obtain downloader rights failed, error code: %ld.",
                  return_code);
-    response->success = false;
     return;
   }
   else
   {
-    RCLCPP_INFO(get_logger(), "Download file by index successful.");
-    response->success = true;
-    return;
+    RCLCPP_DEBUG(get_logger(), "Obtain downloader rights successful.");
   }
 }
 
-// TODO(@lidiadltv): Not working. Debug potential issue
 void
-PSDKWrapper::camera_delete_file_by_index_cb(
-    const std::shared_ptr<CameraDeleteFileByIndex::Request> request,
-    const std::shared_ptr<CameraDeleteFileByIndex::Response> response)
+CameraModule::release_downloader_rights(E_DjiMountPosition index)
+{
+  T_DjiReturnCode return_code;
+  return_code = DjiCameraManager_ReleaseDownloaderRights(index);
+  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+  {
+    RCLCPP_ERROR(get_logger(),
+                 "Release downloader rights failed, error code: %ld",
+                 return_code);
+    return;
+  }
+  else
+  {
+    RCLCPP_DEBUG(get_logger(), "Release downloader rights successful.");
+  }
+}
+
+void
+CameraModule::camera_get_file_list_info_cb(
+    const std::shared_ptr<CameraGetFileListInfo::Request> request,
+    const std::shared_ptr<CameraGetFileListInfo::Response> response)
 {
   T_DjiReturnCode return_code;
   E_DjiMountPosition index =
       static_cast<E_DjiMountPosition>(request->payload_index);
 
-  return_code = DjiCameraManager_DeleteFileByIndex(index, request->file_index);
+  // Register callback
+  register_file_data_callback(index);
+
+  // Obtain downloader rights
+  obtain_downloader_rights(index);
+  T_DjiCameraManagerFileList retrieved_file_list;
+  return_code = DjiCameraManager_DownloadFileList(index, &retrieved_file_list);
   if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
   {
-    RCLCPP_ERROR(get_logger(), "Failed to delete file, error code: %ld.",
+    RCLCPP_ERROR(get_logger(), "Download File List failed, error code: %ld.",
                  return_code);
     response->success = false;
+    // Release rights
+    release_downloader_rights(index);
     return;
   }
   else
   {
-    RCLCPP_INFO(get_logger(), "Deleted file by index successfully.");
+    std::vector<psdk_interfaces::msg::FileInfo> file_list;
+    for (int i = 0; i < retrieved_file_list.totalCount; i++)
+    {
+      psdk_interfaces::msg::FileInfo file_info;
+      file_info = set_file_info(retrieved_file_list.fileListInfo[i]);
+      file_list.push_back(file_info);
+    }
+
+    response->file_list = file_list;
+    response->count = retrieved_file_list.totalCount;
     response->success = true;
-    return;
+  }
+  // Release rights
+  release_downloader_rights(index);
+}
+
+void
+CameraModule::execute_download_file_by_index()
+{
+  auto result = std::make_shared<CameraDownloadFileByIndex::Result>();
+  auto goal = camera_download_file_by_index_server_->get_current_goal();
+
+  E_DjiMountPosition payload_index =
+      static_cast<E_DjiMountPosition>(goal->payload_index);
+  file_index_to_download_ = goal->file_index;
+  file_name_to_download_ = goal->file_name;
+  file_path_to_download_ = goal->file_path;
+
+  // Register callback
+  register_file_data_callback(payload_index);
+
+  // Obtain downloader rights
+  obtain_downloader_rights(payload_index);
+
+  T_DjiReturnCode return_code = DjiCameraManager_DownloadFileByIndex(
+      payload_index, file_index_to_download_);
+
+  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+  {
+    RCLCPP_ERROR(get_logger(),
+                 "Download file with index  %d failed, error code: %ld.",
+                 file_index_to_download_, return_code);
+    result->success = false;
+    camera_download_file_by_index_server_->terminate_current(result);
+  }
+  else
+  {
+    RCLCPP_INFO(get_logger(), "Download file with index %d successful.",
+                file_index_to_download_);
+    result->success = true;
+    camera_download_file_by_index_server_->succeeded_current(result);
+  }
+
+  // Release rights
+  release_downloader_rights(payload_index);
+}
+
+void
+CameraModule::execute_delete_file_by_index()
+{
+  auto result = std::make_shared<CameraDeleteFileByIndex::Result>();
+  auto goal = camera_delete_file_by_index_server_->get_current_goal();
+  E_DjiMountPosition index =
+      static_cast<E_DjiMountPosition>(goal->payload_index);
+
+  T_DjiReturnCode return_code =
+      DjiCameraManager_DeleteFileByIndex(index, goal->file_index);
+
+  if (return_code != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+  {
+    RCLCPP_ERROR(get_logger(),
+                 "Failed to delete file with index %d, error code: %ld.",
+                 goal->file_index, return_code);
+    result->success = false;
+    camera_delete_file_by_index_server_->terminate_current(result);
+  }
+  else
+  {
+    RCLCPP_INFO(get_logger(), "Successfully deleted file with index %d.",
+                goal->file_index);
+    result->success = true;
+    camera_delete_file_by_index_server_->succeeded_current(result);
   }
 }
 
-std::string
-PSDKWrapper::get_optical_frame_id()
+psdk_interfaces::msg::FileInfo
+CameraModule::set_file_info(const T_DjiCameraManagerFileListInfo file_info)
 {
-  for (auto &it : psdk_utils::camera_source_str)
+  psdk_interfaces::msg::FileInfo file;
+  file.name = std::string(file_info.fileName);
+  file.type = file_info.type;
+  file.size = file_info.fileSize;
+  file.index = file_info.fileIndex;
+
+  file.create_time_unix =
+      static_cast<int64_t>(get_unix_time(file_info.createTime));
+  file.attributes = set_file_attributes(file_info.attributeData);
+  file.number_sub_files = file_info.subFileListTotalNum;
+
+  if (file.number_sub_files > 0)
   {
-    if (it.first == selected_camera_source_)
+    for (int i = 0; i < file.number_sub_files; i++)
     {
-      return it.second;
+      psdk_interfaces::msg::SubFileInfo sub_file;
+      sub_file.name = std::string(file_info.subFileListInfo[i].fileName);
+      sub_file.size = file_info.subFileListInfo[i].fileSize;
+      sub_file.index = file_info.subFileListInfo[i].fileIndex;
+      sub_file.type = file_info.subFileListInfo[i].type;
+      sub_file.create_time_unix = static_cast<int64_t>(
+          get_unix_time(file_info.subFileListInfo[i].createTime));
+      sub_file.attributes =
+          set_file_attributes(file_info.subFileListInfo[i].attributeData);
+      file.sub_files.push_back(sub_file);
     }
   }
+
+  return file;
+}
+
+std::time_t
+CameraModule::get_unix_time(const T_DjiCameraManagerFileCreateTime &time)
+{
+  std::tm timeinfo = {};
+  timeinfo.tm_year = time.year - 1900;
+  timeinfo.tm_mon = time.month - 1;
+  timeinfo.tm_mday = time.day;
+  timeinfo.tm_hour = time.hour;
+  timeinfo.tm_min = time.minute;
+  timeinfo.tm_sec = time.second;
+  return std::mktime(&timeinfo);
+}
+
+psdk_interfaces::msg::FileAttributes
+CameraModule::set_file_attributes(
+    const T_DjiCameraManagerFileAttributeData &attributes)
+{
+  psdk_interfaces::msg::FileAttributes att_msg;
+  att_msg.photo_ratio = attributes.photoAttribute.attributePhotoRatio;
+  att_msg.photo_rotation = attributes.photoAttribute.attributePhotoRotation;
+  att_msg.video_duration = attributes.videoAttribute.attributeVideoDuration;
+  att_msg.video_resolution = attributes.videoAttribute.attributeVideoResolution;
+  att_msg.video_frame_rate = attributes.videoAttribute.attributeVideoFramerate;
+  att_msg.video_rotation = attributes.videoAttribute.attributeVideoRotation;
+  return att_msg;
+}
+
+T_DjiReturnCode
+CameraModule::camera_manager_download_file_data_callback(
+    T_DjiDownloadFilePacketInfo packetInfo, const uint8_t *data, uint16_t len)
+{
+  float download_speed = 0.0f;
+  uint32_t download_start_ms = 0;
+  uint32_t download_end_ms = 0;
+  T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
+
+  if (file_name_to_download_.empty())
+  {
+    file_name_to_download_ = std::to_string(packetInfo.fileIndex) + ".jpg";
+  }
+  if (file_path_to_download_.empty())
+  {
+    file_path_to_download_ = default_path_to_download_media_;
+  }
+
+  if (!create_directory(file_path_to_download_))
+  {
+    return DJI_ERROR_SYSTEM_MODULE_CODE_SYSTEM_ERROR;
+  }
+
+  if (packetInfo.downloadFileEvent == DJI_DOWNLOAD_FILE_EVENT_START)
+  {
+    osalHandler->GetTimeMs(&download_start_ms);
+    if (packetInfo.fileIndex == file_index_to_download_)
+    {
+      std::string download_file_name =
+          file_path_to_download_ + file_name_to_download_;
+      RCLCPP_INFO(get_logger(), "Start download media file, index : %d",
+                  packetInfo.fileIndex);
+      s_downloadMediaFile_ = fopen(download_file_name.c_str(), "wb+");
+      if (!write_to_file(data, len))
+      {
+        return DJI_ERROR_SYSTEM_MODULE_CODE_SYSTEM_ERROR;
+      }
+    }
+    else
+    {
+      RCLCPP_ERROR(get_logger(),
+                   "File index does not match the requested file index");
+      return DJI_ERROR_SYSTEM_MODULE_CODE_SYSTEM_ERROR;
+    }
+  }
+  else if (packetInfo.downloadFileEvent == DJI_DOWNLOAD_FILE_EVENT_TRANSFER)
+  {
+    if (!write_to_file(data, len))
+    {
+      return DJI_ERROR_SYSTEM_MODULE_CODE_SYSTEM_ERROR;
+    }
+    RCLCPP_DEBUG(get_logger(),
+                 "Transfer download media file data, len: %d, percent: %.1f",
+                 len, packetInfo.progressInPercent);
+  }
+  else if (packetInfo.downloadFileEvent == DJI_DOWNLOAD_FILE_EVENT_END)
+  {
+    if (!write_to_file(data, len))
+    {
+      return DJI_ERROR_SYSTEM_MODULE_CODE_SYSTEM_ERROR;
+    }
+    osalHandler->GetTimeMs(&download_end_ms);
+    download_speed = static_cast<float>(packetInfo.fileSize) /
+                     static_cast<float>(download_end_ms - download_start_ms);
+    RCLCPP_DEBUG(get_logger(),
+                 "End download media file, index : %d, download speed: %.1f",
+                 packetInfo.fileIndex, download_speed);
+
+    fclose(s_downloadMediaFile_);
+    s_downloadMediaFile_ = NULL;
+  }
+  return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
+}
+
+bool
+CameraModule::write_to_file(const uint8_t *data, uint16_t len)
+{
+  if (s_downloadMediaFile_ != NULL)
+  {
+    fwrite(data, 1, len, s_downloadMediaFile_);
+    return true;
+  }
+  RCLCPP_ERROR(get_logger(), "Failed to write to file");
+  return false;
+}
+
+bool
+CameraModule::create_directory(const std::string &path)
+{
+  if (!std::filesystem::exists(path))
+  {
+    try
+    {
+      std::filesystem::create_directories(path);
+    }
+    catch (const std::exception &e)
+    {
+      RCLCPP_ERROR(get_logger(), "Failed to create directory: %s", e.what());
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace psdk_ros2

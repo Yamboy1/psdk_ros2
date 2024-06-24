@@ -3,18 +3,45 @@ name: ROS2 Build
 on: 
   pull_request:
     types: [opened, synchronize, reopened]
-
+permissions:
+  contents: write
+  statuses: write
+concurrency:
+  group: "${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}"
+  cancel-in-progress: true
 jobs:
+  super-linter:
+    name: Lint Code Base
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Super Linter
+        uses: github/super-linter/slim@v6
+        env:
+          DEFAULT_BRANCH: ${{ github.base_ref }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LOG_LEVEL: NOTICE
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_CPP: true
+          VALIDATE_PYTHON_BLACK: true
+          VALIDATE_PYTHON_FLAKE8: true
+          VALIDATE_XML: true
+          VALIDATE_YAML: true
+
   ros2_build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           path: psdk_ros2
-      - uses: ros-tooling/setup-ros@0.7.1
+      - uses: ros-tooling/setup-ros@0.7.7
         with:
           required-ros-distributions: humble
-      - uses: ros-tooling/action-ros-ci@0.3.6
+      - uses: ros-tooling/action-ros-ci@0.3.14
         with:
           package-name: psdk_interfaces psdk_wrapper
           target-ros2-distro: humble

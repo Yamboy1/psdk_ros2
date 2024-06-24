@@ -9,12 +9,16 @@
 
       num_of_initialization_retries: 3
 
+      tf_frame_prefix: ""
       imu_frame: "psdk_imu_link"
       body_frame: "psdk_base_link"
       map_frame: "psdk_map_enu"
+      gimbal_base_frame: "psdk_gimbal_base_link"
       gimbal_frame: "psdk_gimbal_link"
       camera_frame: "psdk_camera_link"
       publish_transforms: true
+
+      file_path: "/logs/media/"
 
       # Mandatory modules to be initialized. Mark with a true those which you
       # consider mandatory for your application, false otherwise. Be aware that
@@ -45,3 +49,4 @@
         flight_status: 1
         battery_level: 1
         control_information: 1
+        esc_data_frequency: 1

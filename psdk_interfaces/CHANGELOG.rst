@@ -2,6 +2,32 @@
 Changelog for package psdk_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2024-05-31)
+------------------
+* Separate each module with an individual thread
+* Contributors: Rafael Perez-Segui, biancabnd
+
+1.2.1 (2024-05-24)
+------------------
+* Merge pull request `#101 <https://github.com/umdlife/psdk_ros2/issues/101>`_ from umdlife/hotfix/build-farm
+  Add action_msgs as dependency
+* Contributors: biancabnd, vicmassy
+
+1.2.0 (2024-05-23)
+------------------
+* Merge pull request `#81 <https://github.com/umdlife/psdk_ros2/issues/81>`_ from umdlife/feat/sd_images
+  SD card functions
+* Merge pull request `#76 <https://github.com/umdlife/psdk_ros2/issues/76>`_ from umdlife/feat/psdk-3.8.1
+  Upgrade to Payload-SDK v3.8.1
+* Contributors: DominikWawak, Victor Massagué Respall, biancabnd
+
+1.1.1 (2024-03-27)
+------------------
+* Merge pull request `#68 <https://github.com/umdlife/psdk_ros2/issues/68>`_ from umdlife/hotfix/motors-stop
+  Add ESC data
+* Merge remote-tracking branch 'origin/main' into add_namespace_to_tf
+* Contributors: DominikWawak, Rafael Perez-Segui, biancabnd
+
 1.1.0 (2024-02-20)
 ------------------
 * Merge pull request `#51 <https://github.com/umdlife/psdk_ros2/issues/51>`_ from umdlife/feat/hms-support
