@@ -3,3 +3,6 @@ docs/api
 docs/_build/doctrees
 
 .pre-commit-config.yaml
+.vscode/
+build
+.gitignore
